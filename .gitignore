@@ -1,0 +1,5 @@
+src/constants/constants.go
+mysql/*
+api
+bin/api.service
+.direnv
