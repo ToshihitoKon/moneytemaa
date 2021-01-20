@@ -1,21 +1,16 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
 
-	"github.com/ToshihitoKon/moneytemaa/src/db"
 	"github.com/ToshihitoKon/moneytemaa/src/slack"
 	"github.com/ToshihitoKon/moneytemaa/src/web"
 	"github.com/gorilla/mux"
 )
 
-var DB *sql.DB
-
 func main() {
-	db.NewDB()
 	fmt.Println("hello")
 
 	router := mux.NewRouter()

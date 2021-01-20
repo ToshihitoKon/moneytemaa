@@ -20,34 +20,39 @@ import (
 )
 
 var (
-	api = slack.New(constants.SlackBotToken)
+	api = slack.New(constants.SlackBotToken, slack.OptionDebug(true))
 )
 
 func SetHandler(router *mux.Router) {
-	router.HandleFunc("/slack/event", HandlerSlackEvent)
+	router.HandleFunc("/event", HandlerSlackEvent)
 }
 
 func HandlerSlackEvent(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
+		log.Println("ioutil.ReadAll: ", err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	sv, err := slack.NewSecretsVerifier(r.Header, constants.SlackSigningSecret)
+	sv, err := slack.NewSecretsVerifier(r.Header, constants.SlackSigninSecret)
 	if err != nil {
+		log.Println("slack.NewSecretsVerifier: ", err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	if _, err := sv.Write(body); err != nil {
+		log.Println("sv.Write: ", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	if err := sv.Ensure(); err != nil {
+		log.Println("sv.Ensure: ", err)
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 	eventsAPIEvent, err := slackevents.ParseEvent(json.RawMessage(body), slackevents.OptionNoVerifyToken())
 	if err != nil {
+		log.Println("slackevents.ParseEvent: ", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -131,7 +136,7 @@ func messageEventAction(messageEvent *slackevents.MessageEvent) {
 			"\nメモ: ", comment,
 		)
 
-		err = mydb.SlackInsertTransaction(price, comment, messageEvent.User, messageEvent.Channel, messageEvent.TimeStamp)
+		err = mydb.InsertTransaction(price, comment, messageEvent.User, messageEvent.Channel, messageEvent.TimeStamp)
 		if err != nil {
 			slackResponse = fmt.Sprint("失敗したわ ", err.Error())
 		}
